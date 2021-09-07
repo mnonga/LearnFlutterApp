@@ -1,3 +1,4 @@
+import 'package:bible/data/database.dart';
 import 'package:flutter/material.dart';
 
 import 'models.dart';
@@ -10,6 +11,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 import 'profile.dart';
 
+import 'package:bible/data/todos_dao.dart';
+
 class TodoScreen extends StatefulWidget {
   const TodoScreen({Key? key, required this.title}) : super(key: key);
   final String title;
@@ -21,7 +24,8 @@ class TodoScreen extends StatefulWidget {
 }
 
 class _TodoScreenState extends State<TodoScreen> {
-  late Future<List<User>> futureUsers;
+  late Future<List<Todo>> futureTodos;
+  late Stream<List<Todo>> streamTodos;
   int page = 1;
 
   void handleClick(String? value) {
@@ -62,30 +66,8 @@ class _TodoScreenState extends State<TodoScreen> {
   @override
   void initState() {
     super.initState();
-    futureUsers = fetchUsers();
-  }
-
-  Future<List<User>> fetchUsers() async {
-    final response =
-        await http.get(Uri.parse('https://reqres.in/api/users?page=$page'));
-
-    if (response.statusCode == 200) {
-      page++;
-      // If the server did return a 200 OK response,
-      // then parse the JSON.
-      Map<String, dynamic> json = jsonDecode(response.body);
-      List<dynamic> resultList = json['data'];
-      if (page > json["total_pages"]) page = 1;
-      List<User> users = resultList
-          .map((dynamic value) => User.fromJson(value))
-          .toList(growable: false);
-
-      return users;
-    } else {
-      // If the server did not return a 200 OK response,
-      // then throw an exception.
-      throw Exception('Failed to load users');
-    }
+    futureTodos = TodosDao.instance.selectAll();
+    streamTodos = TodosDao.instance.selectAllStream();
   }
 
   @override
@@ -154,17 +136,19 @@ class _TodoScreenState extends State<TodoScreen> {
         onPressed: () {
           // Add your onPressed code here!
           ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text('Reloading...')));
-          setState(() {
-            futureUsers = fetchUsers();
-          });
+              .showSnackBar(SnackBar(content: Text('Adding new todo...')));
+          TodosDao.instance
+              .insert("Todo title", "Todo content")
+              .then((value) => setState(() {
+                    futureTodos = TodosDao.instance.selectAll();
+                  }));
         },
-        child: const Icon(Icons.navigation),
-        backgroundColor: Colors.green,
+        child: const Icon(Icons.add),
+        backgroundColor: Colors.blue[600],
       ),
       body: SingleChildScrollView(
-          child: FutureBuilder<List<User>>(
-        future: futureUsers,
+          child: StreamBuilder<List<Todo>>(
+        stream: streamTodos,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             //https://pub.dev/packages/loadmore
@@ -181,11 +165,10 @@ class _TodoScreenState extends State<TodoScreen> {
                             })*/
                       CachedNetworkImage(
                     placeholder: (context, url) => CircularProgressIndicator(),
-                    imageUrl: snapshot.data![index].avatar!,
+                    imageUrl: "https://picsum.photos/200",
                   ),
-                  title: Text(snapshot.data![index].first_name!),
-                  subtitle: Text(
-                      'A sufficiently long subtitle warrants three lines.'),
+                  title: Text(snapshot.data![index].title),
+                  subtitle: Text(snapshot.data![index].content),
                   trailing: PopupMenuButton<String>(
                     onSelected: (String? choice) async {
                       if (choice == 'Profile') {
@@ -198,8 +181,14 @@ class _TodoScreenState extends State<TodoScreen> {
                             .showSnackBar(SnackBar(content: Text('$res')));
                       } else if (choice == 'Supprimer') {
                         String? res = await _showMyDialog(context);
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(SnackBar(content: Text(res!)));
+                        if (res == "OK") {
+                          TodosDao.instance
+                              .deleteItem(snapshot.data![index])
+                              .then((value) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Supprimé !")));
+                          });
+                        }
                       }
                     },
                     itemBuilder: (BuildContext context) {

@@ -52,15 +52,11 @@ class _MyHomePageState extends State<MyHomePage> {
   late Future<List<User>> futureUsers;
   int page = 1;
 
-  void handleClick(String? value, BuildContext context) {
+  void handleClick(String? value) {
     switch (value) {
       case 'Logout':
         break;
       case 'Settings':
-        Navigator.pushNamed(
-          context,
-          TodoScreen.routeName,
-        );
         break;
     }
   }
@@ -133,9 +129,7 @@ class _MyHomePageState extends State<MyHomePage> {
             },
           ),
           PopupMenuButton<String>(
-            onSelected: (value) {
-              handleClick(value, context);
-            },
+            onSelected: handleClick,
             itemBuilder: (BuildContext context) {
               return {'Logout', 'Settings'}.map((String choice) {
                 return PopupMenuItem<String>(
@@ -162,16 +156,20 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Text('Drawer Header'),
             ),
             ListTile(
-              title: Text('Mon profile'),
+              title: Text('Todos'),
               onTap: () {
                 // Update the state of the app
                 // ...
                 // Then close the drawer
                 Navigator.pop(context);
+                Navigator.pushNamed(
+                  context,
+                  TodoScreen.routeName,
+                );
               },
             ),
             ListTile(
-              title: Text('Item 2'),
+              title: Text('Mon profile'),
               onTap: () {
                 // Update the state of the app
                 // ...

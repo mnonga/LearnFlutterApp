@@ -45,6 +45,10 @@ LazyDatabase _openConnection() {
 
 @UseMoor(tables: [Todos, Categories], daos: [TodosDao])
 class MyDatabase extends _$MyDatabase {
+  static MyDatabase? _instance;
+
+  static MyDatabase get instance => _instance ??= new MyDatabase();
+
   // we tell the database where to store the data with this constructor
   MyDatabase() : super(_openConnection());
 
