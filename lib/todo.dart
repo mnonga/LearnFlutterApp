@@ -1,66 +1,34 @@
-import 'dart:convert';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter_html/flutter_html.dart';
-import 'package:http/http.dart' as http;
-
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 import 'models.dart';
+
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
+
+import 'package:cached_network_image/cached_network_image.dart';
+
 import 'profile.dart';
-import 'todo.dart';
 
-import 'package:get_it/get_it.dart';
-
-void main() {
-  //GetIt.instance.registerSingleton<AppModel>(AppModel());
-  //var myAppModel = GetIt.instance.get<AppModel>();
-  //var myAppModel = GetIt.instance<AppModel>();
-  runApp(MyApp());
-}
-
-//"C:\Users\michee\AppData\Local\Android\Sdk\platform-tools\adb.exe" connect localhost:62001
-//https://pub.dev/packages/get_it
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: MyHomePage(title: 'Wikipedia search API'),
-      routes: {
-        ProfileScreen.routeName: (context) => const ProfileScreen(),
-        TodoScreen.routeName: (context) =>
-            const TodoScreen(title: "Todos title"),
-      },
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key? key, required this.title}) : super(key: key);
+class TodoScreen extends StatefulWidget {
+  const TodoScreen({Key? key, required this.title}) : super(key: key);
   final String title;
 
+  static const routeName = '/todo';
+
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _TodoScreenState createState() => _TodoScreenState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _TodoScreenState extends State<TodoScreen> {
   late Future<List<User>> futureUsers;
   int page = 1;
 
-  void handleClick(String? value, BuildContext context) {
+  void handleClick(String? value) {
     switch (value) {
       case 'Logout':
         break;
       case 'Settings':
-        Navigator.pushNamed(
-          context,
-          TodoScreen.routeName,
-        );
         break;
     }
   }
@@ -133,9 +101,7 @@ class _MyHomePageState extends State<MyHomePage> {
             },
           ),
           PopupMenuButton<String>(
-            onSelected: (value) {
-              handleClick(value, context);
-            },
+            onSelected: handleClick,
             itemBuilder: (BuildContext context) {
               return {'Logout', 'Settings'}.map((String choice) {
                 return PopupMenuItem<String>(
